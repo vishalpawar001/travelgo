@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react'
 import '../styles/tour-details.css'
 // import tourData from '../assets/data/tours'
-import { Container, Row, Col, Form, ListGroup } from 'reactstrap'
+import { Container, Row, Col, Form, ListGroup, Button } from 'reactstrap'
 import { useParams } from 'react-router-dom'
 import calculateAvgRating from '../utils/avgRating'
 import avatar from '../assets/images/avatar.jpg'
@@ -11,15 +11,23 @@ import useFetch from '../hooks/useFetch'
 import { BASE_URL } from '../utils/config'
 import { AuthContext } from '../context/AuthContext'
 import Header from '../components/Header/Header'
+import { imageDB } from '../utils/firebaseConfig'
+import {ref, uploadBytes,getDownloadURL } from 'firebase/storage';
+
+
 
 const TourDetails = () => {
    const { id } = useParams()
    const reviewMsgRef = useRef('')
    const [tourRating, setTourRating] = useState(null)
-   const { user } = useContext(AuthContext)
+   const { user } = useContext(AuthContext);
 
    //
    const [avatar, setAvatar] = useState('')
+   const [image, setImage] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [ct, setCt] = useState(0);
+  const [imgUrl , setImgUrl] = useState("");
 
    // fetch data from database
    const { data: tour, loading, error } = useFetch(`${BASE_URL}/tours/${id}`)
@@ -39,6 +47,30 @@ const TourDetails = () => {
   }
 
 
+      
+  const handleImageUpload =async()=>{
+   setIsUploading(true);
+   console.log("clicked",ct);
+   const img =ref(imageDB,`files/review${ct}`);
+   uploadBytes(img, image)
+     .then((snapshot) => {
+       setCt(ct + 1);
+       getDownloadURL(snapshot.ref).then((url) => {
+         setImgUrl(url);
+         setIsUploading(false);
+         // setFormData({
+         //   ...formData,
+         //   photo: imgUrl,
+         // });
+         console.log('Image URL:', url);
+       });
+     })
+     .catch((error) => {
+       console.error('Error uploading image to Firebase:', error);
+     });
+ }
+
+
 
 
 
@@ -53,7 +85,8 @@ const TourDetails = () => {
          const reviewObj = {
             username: user?.username,
             reviewText,
-            rating: tourRating
+            rating: tourRating,
+            photo:imgUrl
          }
 
          const res = await fetch(`${BASE_URL}/review/${id}`, {
@@ -132,7 +165,14 @@ const TourDetails = () => {
 
                               {/* // */}
 
-                              <input required className="form-control" type="file" accept=".jpg,.png,.jpeg" id="inputId" onChange={imagehandler}></input>
+      
+                              <div>
+                                 <label>Photo:</label>
+                                 <input type="file" onChange={(e) => setImage(e.target.files[0])} />
+         
+                                {isUploading && <span> uploading...</span>}
+                                <Button onClick={handleImageUpload}> Upload IMage </Button>
+                              </div>
 
 
                               {/* // */}
@@ -149,7 +189,7 @@ const TourDetails = () => {
                               {
                                  reviews?.map(review => (
                                     <div className="review__item">
-                                       <img src={avatar} alt="" />
+                                       <img src={review.photo} alt="" />
 
                                        <div className="w-100">
                                           <div className="d-flex align-items-center justify-content-between">
@@ -161,6 +201,7 @@ const TourDetails = () => {
                                              <span className='d-flex align-items-center'>
                                                 {review.rating}<i className='ri-star-s-fill'></i>
                                              </span>
+                                       {/* <img src={review.photo} alt="" /> */}
                                           </div>
 
                                           <h6>{review.reviewText}</h6>

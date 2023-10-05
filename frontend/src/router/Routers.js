@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ThankYou from '../pages/ThankYou'
 import Home from './../pages/Home'
@@ -13,8 +13,25 @@ import AdminBooking from '../pages/Admin/AdminBooking'
 import AdminPackages from '../pages/Admin/AdminPackages'
 import AdminAdd from '../pages/Admin/AdminAdd'
 import ImageUpload from '../shared/ImageUpload'
+import Error from '../pages/Admin/Error'
+
+
 
 const Routers = () => {
+
+   const [isAdmin, setIsAdmin] = useState(false);
+
+   useEffect(() => {
+     const storedValue = localStorage.getItem('adminToken'); 
+     if (storedValue === "secretkey123") {      
+       setIsAdmin(true);
+     }
+   }, [isAdmin]); 
+
+
+
+
+
    return (
       <Routes>
          <Route path='/' element={<Navigate to='/home'/>} />
@@ -26,11 +43,12 @@ const Routers = () => {
          <Route path='/thank-you' element={<ThankYou/>} />
          <Route path='/tours/search' element={<SearchResultList/>} />
          <Route path='/image' element={<ImageUpload/>} />
+
          <Route path='/admin/login' element={<AdminLogin/>} />
-         <Route path='/admin/home' element={<AdminHome/>} />
-         <Route path='/admin/booking' element={<AdminBooking/>} />
-         <Route path='/admin/packages' element={<AdminPackages/>} />
-         <Route path='/admin/addpackage' element={<AdminAdd/>} />
+         <Route path='/admin/home' element={isAdmin? <AdminHome/> : <Error/>} />
+         <Route path='/admin/booking' element={ isAdmin? <AdminBooking/> :  <Error/>} />
+         <Route path='/admin/packages' element={isAdmin? <AdminPackages/> : <Error/>} />
+         <Route path='/admin/addpackage' element={ isAdmin? <AdminAdd/> :  <Error/>} />
       </Routes>
    )
 }

@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
 import { BASE_URL } from '../../utils/config';
 import Header from './Header/Header';
-
+import { imageDB } from '../../utils/firebaseConfig';
+import {ref, uploadBytes,getDownloadURL } from 'firebase/storage';
+import { Button } from 'reactstrap';
 
 function AdminAdd() {
+
+  const [image, setImage] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [ct, setCt] = useState(0);
+  const [imgUrl , setImgUrl] = useState("");
+
   const [formData, setFormData] = useState({
     title: '',
     city: '',
     address: '',
     distance: 0,
-    photo: '',
+    photo: null,
     desc: '',
     price: 0,
     maxGroupSize: 0,
@@ -23,13 +31,34 @@ function AdminAdd() {
     });
   };
 
+  const handleImageUpload =async()=>{
+    setIsUploading(true);
+    console.log("clicked",ct);
+    const img =ref(imageDB,`files/img${ct}`);
+    uploadBytes(img, image)
+      .then((snapshot) => {
+        setCt(ct + 1);
+        getDownloadURL(snapshot.ref).then((url) => {
+          setImgUrl(url);
+          setIsUploading(false);
+          setFormData({
+            ...formData,
+            photo: imgUrl,
+          });
+          console.log('Image URL:', url);
+        });
+      })
+      .catch((error) => {
+        console.error('Error uploading image to Firebase:', error);
+      });
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     console.log("tick")
 
     try {
       // Send a POST request to your backend API endpoint
-
       const res = await fetch(`${BASE_URL}/tours/admin/createTour`, {
         method:'post',
         headers: {
@@ -42,9 +71,11 @@ function AdminAdd() {
      const result = await res.json();
      if(res.status === 200){
         window.alert("Saved successfully");
-     }else{
+        setImgUrl(null);
+
+      }else{
         window.alert("Something went wrong");
-     }
+      }
 
       // Clear the form or perform other actions as needed
       // setFormData({
@@ -106,12 +137,16 @@ function AdminAdd() {
         </div>
         <div>
           <label>Photo:</label>
-          <input
-            type="text"
+          <input type="file" onChange={(e) => setImage(e.target.files[0])} />
+          {/* <input
+            type="file"
             name="photo"
             value={formData.photo}
             onChange={handleInputChange}
-          />
+          /> */}
+          {isUploading && <span> uploading...</span>}
+          <Button onClick={handleImageUpload}> Upload IMage </Button>
+          {/* {imgUrl   && <img  src={imgUrl} alt="Review" />} */}
         </div>
         <div>
           <label>Description:</label>
@@ -140,7 +175,8 @@ function AdminAdd() {
             onChange={handleInputChange}
           />
         </div>
-        <button type="submit" onClick={handleSubmit}>Add Tour</button>
+        {imgUrl ?  <button type="submit" onClick={handleSubmit} >Add Tour</button> : <button type="submit" disabled="true" onClick={handleSubmit} >Add Tour</button>  }
+       
       </form>
     </div>
   );

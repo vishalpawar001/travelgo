@@ -32,6 +32,7 @@ const Header = () => {
 
    const logout = () => {
       // dispatch({ type: 'LOGOUT' })
+      localStorage.setItem('adminToken',null);
       navigate('/')
    }
 

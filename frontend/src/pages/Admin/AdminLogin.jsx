@@ -34,6 +34,7 @@ const AdminLogin = () => {
       const result = await res.json()
       if(res.status===201){
         localStorage.setItem('token', result.token);
+        localStorage.setItem('adminToken', "secretkey123");
         console.log(localStorage.getItem('token'));
         navigate('/admin/home');
       }else if(res.status===200){
