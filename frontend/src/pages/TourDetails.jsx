@@ -13,6 +13,7 @@ import { AuthContext } from '../context/AuthContext'
 import Header from '../components/Header/Header'
 import { imageDB } from '../utils/firebaseConfig'
 import {ref, uploadBytes,getDownloadURL } from 'firebase/storage';
+import { v4 as uuid } from 'uuid';
 
 
 
@@ -23,11 +24,9 @@ const TourDetails = () => {
    const { user } = useContext(AuthContext);
 
    //
-   const [avatar, setAvatar] = useState('')
    const [image, setImage] = useState(null);
+   const [imgUrl , setImgUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-  const [ct, setCt] = useState(0);
-  const [imgUrl , setImgUrl] = useState("");
 
    // fetch data from database
    const { data: tour, loading, error } = useFetch(`${BASE_URL}/tours/${id}`)
@@ -38,38 +37,40 @@ const TourDetails = () => {
 
    const options = { day: 'numeric', month: 'long', year: 'numeric' }
 
-   //
-   const imagehandler = (e) => {
-      if (e.target.files && e.target.files[0]) {
-          let img = e.target.files[0]
-          setAvatar(img)
-      }
-  }
-
-
       
-  const handleImageUpload =async()=>{
-   setIsUploading(true);
-   console.log("clicked",ct);
-   const img =ref(imageDB,`files/review${ct}`);
-   uploadBytes(img, image)
-     .then((snapshot) => {
-       setCt(ct + 1);
-       getDownloadURL(snapshot.ref).then((url) => {
-         setImgUrl(url);
-         setIsUploading(false);
-         // setFormData({
-         //   ...formData,
-         //   photo: imgUrl,
-         // });
-         console.log('Image URL:', url);
-       });
-     })
-     .catch((error) => {
-       console.error('Error uploading image to Firebase:', error);
-     });
- }
+//   const handleImageUpload =async()=>{
+//    setIsUploading(true);
 
+//    const img =ref(imageDB,`files/review${ct}`);
+//    uploadBytes(img, image)
+//      .then((snapshot) => {
+//        setCt(ct + 1);
+//        getDownloadURL(snapshot.ref).then((url) => {
+//          setImgUrl(url);
+//          console.log(ct,": : ", imgUrl);
+//          setIsUploading(false);        
+//        });
+//      })
+//      .catch((error) => {
+//        console.error('Error uploading image to Firebase:', error);
+//      });
+//  }
+
+const handleImageUpload = async () => {
+   setIsUploading(true); 
+   const unique_id = uuid(); 
+   const small_id = unique_id.slice(0,8);
+   try {
+     const imgRef = ref(imageDB, `files/review${small_id}`);
+     const snapshot = await uploadBytes(imgRef, image);
+     const url = await getDownloadURL(snapshot.ref);
+     setImgUrl(url);
+     setIsUploading(false);
+   } catch (error) {
+     console.error('Error uploading image to Firebase:', error);
+   }
+ };
+ 
 
 
 
@@ -77,7 +78,6 @@ const TourDetails = () => {
    const submitHandler = async e => {
       e.preventDefault()
       const reviewText = reviewMsgRef.current.value
-
       try {
          if (!user || user === undefined || user === null) {
             alert('Please sign in')
@@ -88,6 +88,7 @@ const TourDetails = () => {
             rating: tourRating,
             photo:imgUrl
          }
+         console.log("photoUrlis:", reviewObj.photo );
 
          const res = await fetch(`${BASE_URL}/review/${id}`, {
             method: 'post',
@@ -111,6 +112,14 @@ const TourDetails = () => {
    useEffect(() => {
       window.scrollTo(0, 0)
    }, [tour])
+
+
+
+   const squareImageStyle = {
+      width: '350px',
+      height: '250px',
+      borderRadius:'0'
+    };
 
    return (
       <>
@@ -166,19 +175,21 @@ const TourDetails = () => {
                               {/* // */}
 
       
-                              <div>
+                              <div style={{border:"2px solid orange", width:"500px", marginLeft:"10px", padding:"5px 20px", borderRadius:"20px 0 0 20px"}}>
                                  <label>Photo:</label>
                                  <input type="file" onChange={(e) => setImage(e.target.files[0])} />
-         
-                                {isUploading && <span> uploading...</span>}
+                                 <p>
+                                 {isUploading && <span> uploading...</span>}
+                                 </p>
                                 <Button onClick={handleImageUpload}> Upload IMage </Button>
+         
                               </div>
 
 
                               {/* // */}
 
 
-                                 <input type="text" ref={reviewMsgRef} placeholder='share your thoughts' required />
+                                 <input type="text" ref={reviewMsgRef} placeholder='share your thoughts' style={{marginLeft:"20px"}} required />
                                  <button className='btn primary__btn text-white' type='submit'>
                                     Submit
                                  </button>
@@ -189,13 +200,13 @@ const TourDetails = () => {
                               {
                                  reviews?.map(review => (
                                     <div className="review__item">
-                                       <img src={review.photo} alt="" />
+                                       <img src={review.photo} alt=""  style={squareImageStyle} />
 
-                                       <div className="w-100">
-                                          <div className="d-flex align-items-center justify-content-between">
-                                             <div>
-                                                <h5>{review.username}</h5>
-                                                <p>{new Date(review.createdAt).toLocaleDateString('en-US', options)}</p>
+                                       <div className="w-100 ">
+                                          <div className="d-flex  justify-content-between" style={{marginTop:'-120px'}}>
+                                             <div style={{borderBottom:"1px solid black", marginBottom:"5px", padding:"3px"}} >
+                                                <h5>Name: {review.username}</h5>
+                                                <p> Date: {new Date(review.createdAt).toLocaleDateString('en-US', options)}</p>
                                              </div>
 
                                              <span className='d-flex align-items-center'>

@@ -4,13 +4,13 @@ import Header from './Header/Header';
 import { imageDB } from '../../utils/firebaseConfig';
 import {ref, uploadBytes,getDownloadURL } from 'firebase/storage';
 import { Button } from 'reactstrap';
+import { v4 as uuid } from 'uuid';
 
 function AdminAdd() {
 
   const [image, setImage] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [ct, setCt] = useState(0);
   const [imgUrl , setImgUrl] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -31,27 +31,27 @@ function AdminAdd() {
     });
   };
 
-  const handleImageUpload =async()=>{
+
+  const handleImageUpload = async () => {
     setIsUploading(true);
-    console.log("clicked",ct);
-    const img =ref(imageDB,`files/img${ct}`);
-    uploadBytes(img, image)
-      .then((snapshot) => {
-        setCt(ct + 1);
-        getDownloadURL(snapshot.ref).then((url) => {
-          setImgUrl(url);
-          setIsUploading(false);
-          setFormData({
-            ...formData,
-            photo: imgUrl,
-          });
-          console.log('Image URL:', url);
-        });
-      })
-      .catch((error) => {
-        console.error('Error uploading image to Firebase:', error);
-      });
-  }
+    const unique_id = uuid(); 
+    const small_id = unique_id.slice(0,8);
+    const img = ref(imageDB, `files/img${small_id}`);
+    try {
+      const snapshot = await uploadBytes(img, image);
+      const url = await getDownloadURL(snapshot.ref);      
+      setIsUploading(false);    
+      setImgUrl(url);
+      setFormData({
+        ...formData,
+        photo: url,
+      });  
+    } catch (error) {
+      console.error('Error uploading image to Firebase:', error);
+    }
+  };
+  
+
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -78,16 +78,16 @@ function AdminAdd() {
       }
 
       // Clear the form or perform other actions as needed
-      // setFormData({
-      //   title: '',
-      //   city: '',
-      //   address: '',
-      //   distance: 0,
-      //   photo: '',
-      //   desc: '',
-      //   price: 0,
-      //   maxGroupSize: 0,
-      // });
+      setFormData({
+        title: '',
+        city: '',
+        address: '',
+        distance: 0,
+        photo: '',
+        desc: '',
+        price: 0,
+        maxGroupSize: 0,
+      });
     } catch (error) {
       console.error('Error adding data to the database', error);
       // Handle the error, show an error message to the user, etc.
@@ -138,12 +138,6 @@ function AdminAdd() {
         <div>
           <label>Photo:</label>
           <input type="file" onChange={(e) => setImage(e.target.files[0])} />
-          {/* <input
-            type="file"
-            name="photo"
-            value={formData.photo}
-            onChange={handleInputChange}
-          /> */}
           {isUploading && <span> uploading...</span>}
           <Button onClick={handleImageUpload}> Upload IMage </Button>
           {/* {imgUrl   && <img  src={imgUrl} alt="Review" />} */}
