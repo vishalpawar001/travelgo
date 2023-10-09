@@ -10,18 +10,18 @@ const quick__links = [
       display: 'Home'
    },
    {
-      path: '/about',
-      display: 'About'
-   },
-   {
       path: '/tours',
       display: 'Tours'
+   },
+   {
+      path: '/admin/login',
+      display: 'AdminPanel'
    },
 ]
 
 const quick__links2 = [
    {
-      path: '/gallery',
+      path: '/',
       display: 'Gallery'
    },
    {

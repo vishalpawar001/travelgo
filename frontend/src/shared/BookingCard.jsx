@@ -19,30 +19,49 @@ const BookingCard = ({ tour }) => {
 
   // const { totalRating, avgRating } = calculateAvgRating(reviews)
 
+  const styles = {
+    card: {
+      // width:"200px",
+      border: "1px solid #ccc",
+      borderRadius: "10px",
+      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+      padding: "15px",
+      marginBottom: "20px",
+    },
+    cardTitle: {
+      fontSize: "18px",
+      fontWeight: "bold",
+    },
+    cardText: {
+      fontSize: "16px",
+    },
+    cardFooter: {
+      fontSize: "14px",
+      color: "#888",
+    },
+  };
+
   return (
-    <>
-     <Card>
-      <div className="tour__card border border-primary shadow-0">
+    <Card style={styles.card}>
+      <div className="tour__card shadow-0">
         <div class="card  ">
-          {/* <div class="card-header">{tourName}</div> */}
           <div class="card-body">
-            <h5 class="card-title">{fullName} </h5>
-            <p class="card-text">
-              Tour : {tourName} <br />
+            <h5 class="card-title" style={styles.cardTitle}>
+              {fullName}{" "}
+            </h5>
+            <p class="card-text" style={styles.cardText}>
+              Tour: {tourName} <br />
               Email: {userEmail} <br />
-              No : {guestSize} <br />
+              No: {guestSize} <br />
               Phone: {phone} <br />
             </p>
-
-            {/* <button type="button" class="btn btn-primary">
-              Button
-            </button> */}
           </div>
-          <div class="card-footer">Date: {bookAt} </div>
+          <div class="card-footer" style={styles.cardFooter}>
+            Date: {bookAt}{" "}
+          </div>
         </div>
       </div>
-      </Card>
-    </>
+    </Card>
   );
 };
 
